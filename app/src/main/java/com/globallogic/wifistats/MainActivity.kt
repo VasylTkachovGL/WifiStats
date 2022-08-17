@@ -16,9 +16,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             WifiStatsTheme {
-                CollectorScreen(
-                    viewModel = viewModel
-                )
+                CollectorScreen {
+                    viewModel.collectWifiData()
+                }
             }
         }
     }

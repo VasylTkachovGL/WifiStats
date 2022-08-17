@@ -1,6 +1,5 @@
 package com.globallogic.wifistats
 
-import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,7 +20,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun CollectorScreen(
-    viewModel: BaseViewModel
+    onCollectPressed: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -36,7 +35,7 @@ fun CollectorScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Button(
-                onClick = { viewModel.collectWifiData() },
+                onClick = { onCollectPressed() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -57,5 +56,5 @@ fun CollectorScreen(
 @Preview
 @Composable
 fun CollectorScreenPreview() {
-    //CollectorScreen()
+    CollectorScreen {}
 }
