@@ -1,8 +1,8 @@
 package com.globallogic.wifistats.di
 
 import android.content.Context
-import com.globallogic.wifistats.WifiRepository
-import com.globallogic.wifistats.WifiRepositoryImpl
+import com.globallogic.wifistats.repository.WifiRepository
+import com.globallogic.wifistats.repository.WifiRepositoryImpl
 import dagger.Binds
 import dagger.Module
 

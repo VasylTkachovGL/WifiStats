@@ -1,4 +1,4 @@
-package com.globallogic.wifistats
+package com.globallogic.wifistats.repository
 
 interface WifiRepository {
     fun collectWifiData()

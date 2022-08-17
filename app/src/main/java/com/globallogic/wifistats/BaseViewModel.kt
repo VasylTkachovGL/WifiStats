@@ -3,6 +3,7 @@ package com.globallogic.wifistats
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.globallogic.wifistats.di.DaggerInjector
+import com.globallogic.wifistats.repository.WifiRepository
 import javax.inject.Inject
 
 class BaseViewModel(application: Application) : AndroidViewModel(application) {
