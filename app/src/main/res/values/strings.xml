@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WifiStats</string>
+    <string name="collect_wifi_data">Collect WiFi data</string>
 </resources>
