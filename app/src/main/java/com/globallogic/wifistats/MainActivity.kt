@@ -74,8 +74,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun getWifiStats() {
-        if (checkPermission() && isLocationEnabled()) {
-            viewModel.collectWifiData()
+        if (checkPermission()) {
+            if (isLocationEnabled()) {
+                viewModel.collectWifiData()
+            } else {
+                showEnableLocationDialog()
+            }
         }
     }
 
