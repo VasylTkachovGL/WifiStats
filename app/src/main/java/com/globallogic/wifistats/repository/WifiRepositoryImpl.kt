@@ -1,5 +1,6 @@
 package com.globallogic.wifistats.repository
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -45,11 +46,27 @@ class WifiRepositoryImpl @Inject constructor(private val context: Context) : Wif
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun getWifiInfo(wifiInfo: WifiInfo) {
+        val scanResults = wifiManager.scanResults
+        for (scanResult in scanResults) {
+            Log.d("WIFI", "ssid: ${scanResult.SSID} bssid: ${scanResult.BSSID}")
+        }
+
         Log.d("WIFI", "ssid: ${wifiInfo.ssid}")
         Log.d("WIFI", "bssid: ${wifiInfo.bssid}")
         Log.d("WIFI", "MAC: ${wifiInfo.macAddress}")
         Log.d("WIFI", "Frequency: ${wifiInfo.frequency}")
+        Log.d("WIFI", "RSSI: ${wifiInfo.rssi}")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Log.d("WIFI", "rxLinkSpeedMbps: ${wifiInfo.rxLinkSpeedMbps}")
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Log.d("WIFI", "maxSignalLevel: ${wifiManager.maxSignalLevel}")
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Log.d("WIFI", "rxLinkSpeedMbps: ${wifiInfo.currentSecurityType}")
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -65,7 +82,8 @@ class WifiRepositoryImpl @Inject constructor(private val context: Context) : Wif
                     capabilities: NetworkCapabilities
                 ) {
                     super.onCapabilitiesChanged(network, capabilities)
-                    val isConnected = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    val isConnected =
+                        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                     Log.d("WIFI", "Has capability: $isConnected")
                     val wifiInfo = capabilities.transportInfo as WifiInfo?
                     wifiInfo?.let { getWifiInfo(it) } ?: {
