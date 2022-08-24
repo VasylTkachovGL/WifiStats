@@ -6,11 +6,17 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.net.wifi.ScanResult
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.globallogic.wifistats.model.WifiData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 
@@ -21,24 +27,12 @@ class WifiRepositoryImpl @Inject constructor(private val context: Context) : Wif
     private val wifiManager =
         context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
-    override fun collectWifiData() {
-        val isConnected: Boolean
+    override fun collectConnectedWifiData() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             subscribeToNetworkEvents()
-//            val activeNetwork = connectivityManager.activeNetwork ?: return
-//            val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return
-//            isConnected = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-//            if (isConnected) {
-//                Log.d("WIFI", "Signal strength: ${capabilities.signalStrength}")
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-//                    Log.d("WIFI", "Owner UID: ${capabilities.ownerUid}")
-//                }
-//                val wifiInfo = capabilities.transportInfo as WifiInfo?
-//                wifiInfo?.let { getWifiInfo(wifiInfo) }
-//            }
         } else {
             val info = connectivityManager.activeNetworkInfo
-            isConnected = info?.isConnected == true
+            val isConnected = info?.isConnected == true
             if (isConnected) {
                 val wifiInfo = wifiManager.connectionInfo
                 wifiInfo?.let { getWifiInfo(wifiInfo) }
@@ -47,12 +41,29 @@ class WifiRepositoryImpl @Inject constructor(private val context: Context) : Wif
     }
 
     @SuppressLint("MissingPermission")
-    private fun getWifiInfo(wifiInfo: WifiInfo) {
-        val scanResults = wifiManager.scanResults
-        for (scanResult in scanResults) {
-            Log.d("WIFI", "ssid: ${scanResult.SSID} bssid: ${scanResult.BSSID}")
-        }
+    override fun getScannedWifiInfo(): Flow<List<WifiData>> {
+        return flow {
+            val wifiDataList = mutableListOf<WifiData>()
+            val scanResults = wifiManager.scanResults
+            for (scanResult in scanResults) {
+                wifiDataList.add(
+                    WifiData(
+                        scanResult.SSID,
+                        scanResult.BSSID,
+                        scanResult.frequency,
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            scanResult.channelWidth
+                        } else 0,
+                        scanResult.level
+                    )
+                )
+                Log.d("WIFI", "Scan result: $scanResult")
+            }
+            emit(wifiDataList)
+        }.flowOn(Dispatchers.IO)
+    }
 
+    private fun getWifiInfo(wifiInfo: WifiInfo) {
         Log.d("WIFI", "ssid: ${wifiInfo.ssid}")
         Log.d("WIFI", "bssid: ${wifiInfo.bssid}")
         Log.d("WIFI", "MAC: ${wifiInfo.macAddress}")
@@ -86,9 +97,7 @@ class WifiRepositoryImpl @Inject constructor(private val context: Context) : Wif
                         capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                     Log.d("WIFI", "Has capability: $isConnected")
                     val wifiInfo = capabilities.transportInfo as WifiInfo?
-                    wifiInfo?.let { getWifiInfo(it) } ?: {
-
-                    }
+                    wifiInfo?.let { getWifiInfo(it) }
                 }
             }
         connectivityManager.requestNetwork(request, networkCallback)

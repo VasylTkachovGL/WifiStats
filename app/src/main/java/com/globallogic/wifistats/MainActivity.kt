@@ -17,6 +17,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import com.globallogic.wifistats.model.WifiData
 import com.globallogic.wifistats.ui.theme.WifiStatsTheme
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
@@ -28,7 +29,7 @@ import com.google.android.gms.location.LocationSettingsStatusCodes
 class MainActivity : ComponentActivity() {
 
     lateinit var viewModel: BaseViewModel
-    private val multiplePermissions =
+    private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 getWifiStats()
@@ -42,7 +43,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             WifiStatsTheme {
-                CollectorScreen {
+                CollectorScreen(viewModel.wifiData) {
                     getWifiStats()
                 }
             }
@@ -89,7 +90,7 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            multiplePermissions.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             false
         } else {
             true
