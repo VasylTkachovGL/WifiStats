@@ -2,10 +2,7 @@ package com.globallogic.wifistats.repository
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
+import android.net.*
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -17,6 +14,8 @@ import com.globallogic.wifistats.model.ConnectedWifiData
 import com.globallogic.wifistats.model.WifiData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import java.net.Inet6Address
+import java.net.InetAddress
 import javax.inject.Inject
 
 
@@ -26,6 +25,8 @@ class WifiRepositoryImpl @Inject constructor(context: Context) : WifiRepository 
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val wifiManager =
         context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    private var activeNetwork: Network? = null
+
     private val _connectedWifiFlow: MutableStateFlow<ConnectedWifiData?> = MutableStateFlow(null)
     private val connectedWifiFlow: StateFlow<ConnectedWifiData?> = _connectedWifiFlow
 
@@ -34,6 +35,9 @@ class WifiRepositoryImpl @Inject constructor(context: Context) : WifiRepository 
             subscribeToNetworkEvents()
         } else {
             if (connectivityManager.activeNetworkInfo?.isConnected == true) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    activeNetwork = connectivityManager.activeNetwork
+                }
                 val wifiInfo = wifiManager.connectionInfo
                 wifiInfo?.let { getWifiInfo(wifiInfo) }
             }
@@ -70,17 +74,27 @@ class WifiRepositoryImpl @Inject constructor(context: Context) : WifiRepository 
     }
 
     private fun getWifiInfo(wifiInfo: WifiInfo) {
+        val routes: List<RouteInfo>? = connectivityManager.getLinkProperties(activeNetwork)?.routes
+        var gateway: InetAddress? = null
+        if (routes != null) {
+            for (route in routes) {
+                if (route.isDefaultRoute && route.gateway !is Inet6Address) {
+                    gateway = route.gateway
+                }
+            }
+        }
+        val ipAddress = Formatter.formatIpAddress(wifiInfo.ipAddress)
+        val dnsServers = connectivityManager.getLinkProperties(activeNetwork)?.dnsServers
+
         _connectedWifiFlow.value = ConnectedWifiData(
             wifiInfo.ssid,
             wifiInfo.bssid,
-            Formatter.formatIpAddress(wifiInfo.ipAddress),
+            ipAddress,
+            gateway,
+            dnsServers,
             wifiInfo.rssi
         )
-        Log.d("WIFI", "Ssid: ${wifiInfo.ssid}")
-        Log.d("WIFI", "Bssid: ${wifiInfo.bssid}")
-        Log.d("WIFI", "Ip address: ${wifiInfo.ipAddress}")
-        Log.d("WIFI", "Frequency: ${wifiInfo.frequency}")
-        Log.d("WIFI", "RSSI: ${wifiInfo.rssi}")
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             Log.d("WIFI", "rxLinkSpeedMbps: ${wifiInfo.rxLinkSpeedMbps}")
         }
@@ -91,10 +105,9 @@ class WifiRepositoryImpl @Inject constructor(context: Context) : WifiRepository 
 
     @RequiresApi(Build.VERSION_CODES.S)
     private fun subscribeToNetworkEvents() {
-        val request: NetworkRequest =
-            NetworkRequest.Builder()
-                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                .build()
+        val request: NetworkRequest = NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .build()
         val networkCallback: ConnectivityManager.NetworkCallback =
             object : ConnectivityManager.NetworkCallback(FLAG_INCLUDE_LOCATION_INFO) {
                 override fun onCapabilitiesChanged(
@@ -102,11 +115,12 @@ class WifiRepositoryImpl @Inject constructor(context: Context) : WifiRepository 
                     capabilities: NetworkCapabilities
                 ) {
                     super.onCapabilitiesChanged(network, capabilities)
-                    val isConnected =
-                        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    Log.d("WIFI", "Has capability: $isConnected")
-                    val wifiInfo = capabilities.transportInfo as WifiInfo?
-                    wifiInfo?.let { getWifiInfo(it) }
+                    val isConnected = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    if (isConnected) {
+                        activeNetwork = network
+                        val wifiInfo = capabilities.transportInfo as WifiInfo?
+                        wifiInfo?.let { getWifiInfo(it) }
+                    }
                 }
             }
         connectivityManager.requestNetwork(request, networkCallback)

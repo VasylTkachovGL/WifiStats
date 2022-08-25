@@ -3,14 +3,10 @@ package com.globallogic.wifistats.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.globallogic.wifistats.model.ChannelWidth
 import com.globallogic.wifistats.model.WifiData
 import com.globallogic.wifistats.ui.common.BodyText

@@ -1,6 +1,5 @@
 package com.globallogic.wifistats.ui
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -71,6 +70,16 @@ fun CollectorScreen(
                         BodyText(text = "SSID: ${data.ssid}")
                         BodyText(text = "BSSID: ${data.bssid}")
                         BodyText(text = "IP address: ${data.ipAddress}")
+                        if (data.gateway != null) {
+                            BodyText(text = "Gateway: ${data.gateway}")
+                        }
+                        Row {
+                            BodyText("DNS: ")
+                            if (data.dnsServers != null)
+                                for (dnsServer in data.dnsServers) {
+                                    BodyText("${dnsServer.hostAddress} ")
+                                }
+                        }
                         BodyText("Signal strength: ${data.rssi}")
                     }
                 }
