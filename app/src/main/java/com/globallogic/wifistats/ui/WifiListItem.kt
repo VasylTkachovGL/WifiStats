@@ -1,6 +1,8 @@
 package com.globallogic.wifistats.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,64 +13,38 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.globallogic.wifistats.model.ChannelWidth
 import com.globallogic.wifistats.model.WifiData
+import com.globallogic.wifistats.ui.common.BodyText
 
 @Composable
 fun WifiListItem(data: WifiData) {
-    Column(Modifier.fillMaxWidth()) {
-        Text(
-            text = "SSID: ${data.ssid}",
-            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            style = TextStyle(
-                fontWeight = FontWeight.W500,
-                fontSize = 14.sp
-            )
-        )
-        Text(
-            text = "BSSID: ${data.bssid}",
-            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            style = TextStyle(
-                fontWeight = FontWeight.W500,
-                fontSize = 14.sp
-            )
-        )
-        Text(
-            text = "Frequency: ${data.frequency}MHz",
-            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            style = TextStyle(
-                fontWeight = FontWeight.W500,
-                fontSize = 14.sp
-            )
-        )
-        Text(
-            text = "Signal strength: ${data.rssi}",
-            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            style = TextStyle(
-                fontWeight = FontWeight.W500,
-                fontSize = 14.sp
-            )
-        )
-        Text(
-            text = "Channel: ${data.channelWidth}",
-            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            style = TextStyle(
-                fontWeight = FontWeight.W500,
-                fontSize = 14.sp
-            )
-        )
-        Text(
-            text = "Security types: ${data.capabilities}",
-            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            style = TextStyle(
-                fontWeight = FontWeight.W500,
-                fontSize = 14.sp
-            )
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+    Card(shape = RoundedCornerShape(8.dp)) {
+        Column(
+            Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+        ) {
+            BodyText("SSID: ${data.ssid}")
+            BodyText("BSSID: ${data.bssid}")
+            BodyText("Frequency: ${data.frequency}MHz")
+            BodyText("Signal strength: ${data.rssi}")
+            BodyText("Channel: ${data.channelWidth}")
+            BodyText("Security types: ${data.capabilities}")
+        }
     }
+    Spacer(modifier = Modifier.height(8.dp))
 }
 
 @Preview
 @Composable
 fun ListItemPreview() {
-    WifiListItem(WifiData("WifiSpot1", "d0:15:a6:a4:c8:63", 2400, ChannelWidth.CHANNEL_WIDTH_20MHZ.title, -61, "[WPA2-PSK-CCMP]"))
+    WifiListItem(
+        WifiData(
+            "WifiSpot1",
+            "d0:15:a6:a4:c8:63",
+            2400,
+            ChannelWidth.CHANNEL_WIDTH_20MHZ.title,
+            -61,
+            "[WPA2-PSK-CCMP]"
+        )
+    )
 }
