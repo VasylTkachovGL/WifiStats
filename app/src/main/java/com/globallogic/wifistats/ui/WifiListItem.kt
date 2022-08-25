@@ -1,4 +1,4 @@
-package com.globallogic.wifistats.screen
+package com.globallogic.wifistats.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -9,6 +9,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.globallogic.wifistats.model.ChannelWidth
 import com.globallogic.wifistats.model.WifiData
 
 @Composable
@@ -31,7 +32,7 @@ fun WifiListItem(data: WifiData) {
             )
         )
         Text(
-            text = "Frequency: ${data.frequency}",
+            text = "Frequency: ${data.frequency}MHz",
             Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
             style = TextStyle(
                 fontWeight = FontWeight.W500,
@@ -54,6 +55,14 @@ fun WifiListItem(data: WifiData) {
                 fontSize = 14.sp
             )
         )
+        Text(
+            text = "Security types: ${data.capabilities}",
+            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+            style = TextStyle(
+                fontWeight = FontWeight.W500,
+                fontSize = 14.sp
+            )
+        )
         Spacer(modifier = Modifier.height(4.dp))
     }
 }
@@ -61,5 +70,5 @@ fun WifiListItem(data: WifiData) {
 @Preview
 @Composable
 fun ListItemPreview() {
-    WifiListItem(WifiData("WifiSpot1", "d0:15:a6:a4:c8:63", 2400, 0, -61))
+    WifiListItem(WifiData("WifiSpot1", "d0:15:a6:a4:c8:63", 2400, ChannelWidth.CHANNEL_WIDTH_20MHZ.title, -61, "[WPA2-PSK-CCMP]"))
 }

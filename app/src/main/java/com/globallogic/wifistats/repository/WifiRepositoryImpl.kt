@@ -6,38 +6,39 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import android.net.wifi.ScanResult
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.text.format.Formatter
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.globallogic.wifistats.model.ChannelWidth
+import com.globallogic.wifistats.model.ConnectedWifiData
 import com.globallogic.wifistats.model.WifiData
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 
-class WifiRepositoryImpl @Inject constructor(private val context: Context) : WifiRepository {
+class WifiRepositoryImpl @Inject constructor(context: Context) : WifiRepository {
 
     private val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val wifiManager =
         context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    private val _connectedWifiFlow: MutableStateFlow<ConnectedWifiData?> = MutableStateFlow(null)
+    private val connectedWifiFlow: StateFlow<ConnectedWifiData?> = _connectedWifiFlow
 
-    override fun collectConnectedWifiData() {
+    override fun collectConnectedWifiData(): StateFlow<ConnectedWifiData?> {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             subscribeToNetworkEvents()
         } else {
-            val info = connectivityManager.activeNetworkInfo
-            val isConnected = info?.isConnected == true
-            if (isConnected) {
+            if (connectivityManager.activeNetworkInfo?.isConnected == true) {
                 val wifiInfo = wifiManager.connectionInfo
                 wifiInfo?.let { getWifiInfo(wifiInfo) }
             }
         }
+        return connectedWifiFlow
     }
 
     @SuppressLint("MissingPermission")
@@ -46,15 +47,20 @@ class WifiRepositoryImpl @Inject constructor(private val context: Context) : Wif
             val wifiDataList = mutableListOf<WifiData>()
             val scanResults = wifiManager.scanResults
             for (scanResult in scanResults) {
+                val channelWidth =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        ChannelWidth.fromValue(scanResult.channelWidth).title
+                    } else {
+                        ChannelWidth.CHANNEL_WIDTH_20MHZ.title
+                    }
                 wifiDataList.add(
                     WifiData(
                         scanResult.SSID,
                         scanResult.BSSID,
                         scanResult.frequency,
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            scanResult.channelWidth
-                        } else 0,
-                        scanResult.level
+                        channelWidth,
+                        scanResult.level,
+                        scanResult.capabilities
                     )
                 )
                 Log.d("WIFI", "Scan result: $scanResult")
@@ -64,9 +70,15 @@ class WifiRepositoryImpl @Inject constructor(private val context: Context) : Wif
     }
 
     private fun getWifiInfo(wifiInfo: WifiInfo) {
-        Log.d("WIFI", "ssid: ${wifiInfo.ssid}")
-        Log.d("WIFI", "bssid: ${wifiInfo.bssid}")
-        Log.d("WIFI", "MAC: ${wifiInfo.macAddress}")
+        _connectedWifiFlow.value = ConnectedWifiData(
+            wifiInfo.ssid,
+            wifiInfo.bssid,
+            Formatter.formatIpAddress(wifiInfo.ipAddress),
+            wifiInfo.rssi
+        )
+        Log.d("WIFI", "Ssid: ${wifiInfo.ssid}")
+        Log.d("WIFI", "Bssid: ${wifiInfo.bssid}")
+        Log.d("WIFI", "Ip address: ${wifiInfo.ipAddress}")
         Log.d("WIFI", "Frequency: ${wifiInfo.frequency}")
         Log.d("WIFI", "RSSI: ${wifiInfo.rssi}")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -74,9 +86,6 @@ class WifiRepositoryImpl @Inject constructor(private val context: Context) : Wif
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Log.d("WIFI", "maxSignalLevel: ${wifiManager.maxSignalLevel}")
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            Log.d("WIFI", "rxLinkSpeedMbps: ${wifiInfo.currentSecurityType}")
         }
     }
 

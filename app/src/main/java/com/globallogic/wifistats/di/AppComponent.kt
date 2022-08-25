@@ -1,7 +1,7 @@
 package com.globallogic.wifistats.di
 
 import android.content.Context
-import com.globallogic.wifistats.BaseViewModel
+import com.globallogic.wifistats.ui.BaseViewModel
 import dagger.BindsInstance
 import dagger.Component
 
