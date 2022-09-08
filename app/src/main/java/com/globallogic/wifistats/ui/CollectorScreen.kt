@@ -1,5 +1,8 @@
 package com.globallogic.wifistats.ui
 
+import android.annotation.SuppressLint
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +27,7 @@ import com.globallogic.wifistats.ui.common.HeaderText
 
 @Composable
 fun CollectorScreen(
+    deviceID: String,
     wifiItemsData: LiveData<List<WifiData>>,
     connectedWifiData: LiveData<ConnectedWifiData>,
     onCollectPressed: () -> Unit
@@ -58,6 +62,21 @@ fun CollectorScreen(
                 )
             }
             connectedWifiState.value?.let { data ->
+                Spacer(modifier = Modifier.height(8.dp))
+                HeaderText("Device info")
+                Spacer(modifier = Modifier.height(4.dp))
+                Card(shape = RoundedCornerShape(8.dp)) {
+                    Column(
+                        Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        BodyText(text = "Manufacture: ${Build.MANUFACTURER}")
+                        BodyText(text = "Model: ${Build.MODEL}")
+                        BodyText(text = "DeviceID $deviceID")
+                        BodyText(text = "Version: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 HeaderText("Connected WiFi")
                 Spacer(modifier = Modifier.height(4.dp))
@@ -101,5 +120,5 @@ fun CollectorScreen(
 @Preview
 @Composable
 fun CollectorScreenPreview() {
-    CollectorScreen(MutableLiveData(), MutableLiveData()) {}
+    CollectorScreen("0000", MutableLiveData(), MutableLiveData()) {}
 }

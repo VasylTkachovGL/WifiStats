@@ -16,6 +16,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import java.net.Inet6Address
 import java.net.InetAddress
+import java.net.NetworkInterface
+import java.util.*
 import javax.inject.Inject
 
 
@@ -95,12 +97,10 @@ class WifiRepositoryImpl @Inject constructor(context: Context) : WifiRepository 
             wifiInfo.rssi
         )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            Log.d("WIFI", "rxLinkSpeedMbps: ${wifiInfo.rxLinkSpeedMbps}")
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Log.d("WIFI", "maxSignalLevel: ${wifiManager.maxSignalLevel}")
         }
+        Log.d("WIFI", "MAC: ${wifiInfo.macAddress}")
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
