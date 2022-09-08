@@ -1,8 +1,6 @@
 package com.globallogic.wifistats.ui
 
-import android.annotation.SuppressLint
 import android.os.Build
-import android.provider.Settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape

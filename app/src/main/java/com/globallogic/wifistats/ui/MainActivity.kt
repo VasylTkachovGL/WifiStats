@@ -1,7 +1,6 @@
 package com.globallogic.wifistats.ui
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -27,7 +26,7 @@ import com.google.android.gms.location.LocationSettingsStatusCodes
 
 class MainActivity : ComponentActivity() {
 
-    lateinit var viewModel: BaseViewModel
+    private lateinit var viewModel: BaseViewModel
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
@@ -38,7 +37,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(BaseViewModel::class.java)
+        viewModel = ViewModelProvider(this)[BaseViewModel::class.java]
 
         setContent {
             WifiStatsTheme {
@@ -56,6 +55,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_ENABLE_LOCATION && resultCode == Activity.RESULT_OK) {
